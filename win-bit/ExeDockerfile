@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/windows/servercore:1809 as core
+
+COPY fluent-bit-2.1.7-win64.exe fluent-bit-2.1.7-win64.exe
+RUN fluent-bit-2.1.7-win64.exe /S /D=C:\fluent-bit
+
+COPY fluent-bit.conf /fluent-bit/conf/fluent-bit.conf
+
+
+FROM mcr.microsoft.com/windows/nanoserver:1809
+
+USER ContainerAdministrator
+COPY --from=core /Windows/System32/netapi32.dll /Windows/System32/netapi32.dll
+COPY --from=core /fluent-bit /fluent-bit
+RUN setx /M PATH "%PATH%;C:\fluent-bit\bin"
+
+
+ENTRYPOINT [ "fluent-bit.exe" ]
+CMD [ "fluent-bit.exe", "-c", "/fluent-bit/conf/fluent-bit.conf" ]
+
+
+
+# CMD [ "ping", "-t","localhost" ]
+

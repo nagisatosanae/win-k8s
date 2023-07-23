@@ -1,0 +1,22 @@
+task :default do
+    cd ".." do
+      package = ENV['PACKAGE']
+      arch = ENV['ARCH']
+      
+      mkdir_p "packages/#{package}/recipes/msys2/"
+      cp Dir["/ruby*/msys*/var/cache/pacman/pkg/msys2-{x86_64,i686}-latest.tar.xz"], "packages/#{package}/recipes/msys2/"
+  
+      sh "rake #{package}:ruby-2.6.4-#{arch} #{package}:ruby-2.5.6-#{arch} #{package}:ruby-2.4.7-#{arch}"
+  
+      # Copy result files to the output directory
+      cp Dir["packages/#{package}/recipes/installer-inno/*.exe"], "pkg/"
+      cp Dir["packages/#{package}/recipes/archive-7z/*.7z"], "pkg/"
+      cp Dir["packages/#{package}/recipes/msys2/msys2-{x86_64,i686}-latest.tar.xz"], Dir["/ruby*/msys*/var/cache/pacman/pkg/"]
+    end
+  end
+  
+  # GPG starts a background process called "gpg-agent".
+  # For safety we shut the process explicit down when finished with all tasks.
+  END {
+    sh "ridk exec gpgconf --homedir /etc/pacman.d/gnupg --kill all"
+  }s

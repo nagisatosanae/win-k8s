@@ -1,0 +1,37 @@
+# escape=`
+FROM fluent/fluent-bit:windows-2019-2.1.7 as builder
+
+
+
+# FROM mcr.microsoft.com/windows/servercore:ltsc2019 as vs
+
+# RUN mkdir c:\\fluent-bit
+
+# RUN powershell Write-Host ('Installing Visual C++ Redistributable Package'); `
+#     $ProgressPreference = 'SilentlyContinue'; `
+#     Invoke-WebRequest -Uri 'https://aka.ms/vs/16/release/vc_redist.x64.exe' -OutFile /vc_redist.x64.exe; `
+#     $ProgressPreference = 'Continue'; `
+#     Start-Process /vc_redist.x64.exe -ArgumentList '/install', '/quiet', '/norestart' -NoNewWindow -Wait; `
+#     Copy-Item -Path /Windows/System32/msvcp140.dll -Destination /fluent-bit/bin; `
+#     Copy-Item -Path /Windows/System32/vccorlib140.dll -Destination /fluent-bit/bin; `
+#     Copy-Item -Path /Windows/System32/vcruntime140.dll -Destination /fluent-bit/bin;
+
+
+
+
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2019
+
+USER ContainerAdministrator
+COPY --from=builder /fluent-bit /fluent-bit
+COPY --from=builder /Windows/System32/netapi32.dll /Windows/System32/netapi32.dll
+
+# COPY --from=vs /Windows/System32/msvcp140.dll /fluent-bit/msvcp140.dll
+# COPY --from=vs /Windows/System32/vccorlib140.dll /fluent-bit/vccorlib140.dll
+# COPY --from=vs /Windows/System32/vcruntime140.dll /fluent-bit/vcruntime140.dll
+
+RUN setx /M PATH "%PATH%;C:\fluent-bit\bin"
+
+# ENTRYPOINT [ "fluent-bit.exe" ]
+# CMD [ "fluent-bit.exe", "-c", "/fluent-bit/etc/fluent-bit.conf" ]
+
+CMD [ "ping", "-t","localhost" ]
